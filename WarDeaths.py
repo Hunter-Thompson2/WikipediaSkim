@@ -2,7 +2,7 @@ import wikipedia
 import requests
 from bs4 import BeautifulSoup
 
-def Scrape(url):
+def scrape(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, features="lxml")
    
@@ -14,15 +14,29 @@ def Scrape(url):
         #append the list of table elements to teh current list
         #tr is a table element 
         wars.extend(t.find_all("tr"))
-    #for war in wars:
-        #print(war.text)
-        #print("*******************************************************************")
-    #print(wars[2])
-    #print(len(wars))
-        #print(t.text)
-        #print("--------------------------------------------------------------------")
+    for war in wars:
+        print(war.text)
+        print("*******************************************************************")
+
     return wars
 
+def createPairs(wars):
+    pairs = []
+    for war in wars:
+        lines = war.text.split("\n")
+        pair = (lines[3], lines[5])
+        pairs.append(pair)
+    return pairs
+
+#split into sets by 50 year periods
+
+#aggregate to 1 total
+
+#create histogram
 
 URL = "https://en.wikipedia.org/wiki/List_of_wars_by_death_toll"
-wars = Scrape(URL)
+
+wars = scrape(URL)
+deathsAndYear = createPairs(wars)
+for war in deathsAndYear:
+    print(war[0] + " " + war[1])
