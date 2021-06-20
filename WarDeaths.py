@@ -2,6 +2,8 @@
 import requests
 import re
 from bs4 import BeautifulSoup
+from matplotlib import pyplot as plt
+import numpy as np
 
 def scrape(url):
     response = requests.get(url)
@@ -48,21 +50,19 @@ def createPairs(wars):
         #take the starting year
         year = lines[5].split("–")[0]
         deathsDigit = re.findall(r'\d+', deaths)
-        print(len(re.findall(",", deaths)))
-        print(deaths)
         if len(deathsDigit) > 0 and len(yearDigit) > 0:
-            deathsDigit[0] = deathsDigit[0] * pow(1000, len(re.findall(",", deaths)))
+            deathsDigit[0] = int(deathsDigit[0]) * pow(1000, len(re.findall(",", deaths)))
         yearDigit = re.findall(r'\d+', year)
         #create a temporary pair using a tuple
         if len(deathsDigit) > 0 and len(yearDigit) > 0:
             pair = (deathsDigit[0], yearDigit[0])
-            #pair = (deaths, year)
             #add to final list
             pairs.append(pair)
     return pairs
 
 #split into sets by 50 year periods
 def aggregateByPeriod(deathsAndYear):
+    
     periodSize = 41  #2050 AD/50 = 41 periods
     periodTotals = [0] * periodSize
     for pair in deathsAndYear:
@@ -70,13 +70,32 @@ def aggregateByPeriod(deathsAndYear):
         index = int(year / 50)
         deaths = int(pair[0])
         periodTotals[index] = deaths + periodTotals[index]
-        #print(deaths)
-        #print(index*50)
-        #print(periodTotals[index])
+
+
     for i in range(41):
         period = str(i*50)
         print(str(periodTotals[i]) + " in " + period + "\n")
+    
+    return periodTotals
 #aggregate to 1 total
+def finalizeData(periodTotals):
+    yearAndTotal = []
+    years = []
+    for i in range(len(periodTotals)):
+        years.append(i*50)
+        pair = (i*50, periodTotals[i])
+        yearAndTotal.append(pair)
+    #index = np.arange(len(yearAndTotal))
+    #plt.bar(index, periodTotals) #add color=''
+    #plt.xticks(index, years, rotation='vertical')
+    #plt.tight_layout()
+    #plt.show()
+    #ax = plt.subplots()
+    #ax.bar(years, periodTotals, .35)
+    #ax.set_ylabel('Deaths')
+    #ax.set_title('Deaths by War')
+    
+    return years, periodTotals
 
 #create histogram
 
@@ -84,6 +103,14 @@ URL = "https://en.wikipedia.org/wiki/List_of_wars_by_death_toll"
 
 wars = scrape(URL)
 deathsAndYear = createPairs(wars)
-aggregateByPeriod(deathsAndYear)
+years, periodTotals = finalizeData(aggregateByPeriod(deathsAndYear))
+periodTotals = [int(i) for i in periodTotals]
+print(periodTotals)
+fig, ax = plt.subplots()
+ax.bar(years, periodTotals, len(years))
+ax.set_ylabel('Deaths')
+ax.set_title('Deaths by War')
+ax.legend()
+plt.show()
 #for war in deathsAndYear:
     #print(war[0] + " " + war[1])
